@@ -1,5 +1,6 @@
 import ServiceCard from '../components/ServiceCard';
 import Search from '../components/Search/Search';
+import HeroCarousel from '../components/Hero/HeroCarousel';
 
 const Home = () => {
     const services = [
@@ -11,42 +12,84 @@ const Home = () => {
         { title: 'Eventos Acontecendo', iconType: 'event' },
     ] as const;
 
+    const howItWorks = [
+        {
+            title: 'Planeje sua viagem',
+            description:
+                'Escolha seu destino, datas e preferências de hospedagem',
+            icon: '✈️',
+        },
+        {
+            title: 'Compare opções',
+            description: 'Encontre as melhores ofertas e compare preços',
+            icon: '🔍',
+        },
+        {
+            title: 'Reserve com segurança',
+            description: 'Faça sua reserva com garantia de melhor preço',
+            icon: '🎯',
+        },
+    ];
+
     return (
         <div className="min-h-screen flex flex-col">
             <main className="flex-grow">
                 {/* Hero Section */}
-                <section className="container mx-auto px-8 py-20 grid md:grid-cols-2 gap-12 items-center max-w-7xl">
-                    <div className="space-y-8">
-                        <h1 className="text-4xl md:text-5xl font-bold">
-                            Explore as praias de
-                            <span className="text-blue-500 block mt-2">
-                                Natal RN
-                            </span>
-                        </h1>
-                        <p className="text-gray-600 text-lg">
-                            Descubra as mais belas praias do nordeste
-                            brasileiro. Planeje sua viagem perfeita com as
-                            melhores opções de hospedagem e passeios.
-                        </p>
-                        <div className="w-full">
-                            <button className="w-full bg-black text-white px-8 py-4 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
-                                Começar
-                                <span className="text-xl">→</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="rounded-2xl overflow-hidden shadow-2xl">
-                        <img
-                            src="https://coralplaza.com.br/wp-content/uploads/2019/04/280453-x-praias-urbanas-em-natal-que-voce-nao-pode-deixar-de-conferir.jpg"
-                            alt="Praias de Natal"
-                            className="w-full h-[400px] object-cover hover:scale-105 transition-transform duration-500"
-                        />
-                    </div>
+                <section className="container mx-auto px-8 py-20 max-w-7xl">
+                    <HeroCarousel />
                 </section>
 
                 {/* Search Section */}
-                <Search />
+                <section className="container mx-auto px-8 py-16 max-w-7xl">
+                    <div className="text-center mb-16 max-w-2xl mx-auto">
+                        <h2 className="text-3xl font-bold mb-6">
+                            O que você quer encontrar?
+                        </h2>
+                        <p className="text-gray-600 text-lg">
+                            Encontre as melhores opções de hospedagem, passeios
+                            e voos para a sua viagem.
+                        </p>
+                    </div>
+                    <Search />
+                </section>
+
+                {/* How It Works Section */}
+                <section className="py-24 bg-gradient-to-b from-white to-gray-50">
+                    <div className="container mx-auto px-8 max-w-7xl">
+                        <div className="text-center mb-16">
+                            <h2 className="text-4xl font-bold mb-6">
+                                Como funciona
+                            </h2>
+                            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+                                Planeje sua viagem em três passos simples e
+                                aproveite ao máximo sua experiência
+                            </p>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-12 relative">
+                            {/* Linha conectora */}
+                            <div className="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-blue-100 -z-10"></div>
+
+                            {howItWorks.map((step) => (
+                                <div
+                                    key={step.title}
+                                    className="relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                                    <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-white text-2xl">
+                                        {step.icon}
+                                    </div>
+                                    <div className="text-center mt-6">
+                                        <h3 className="text-xl font-semibold mb-4">
+                                            {step.title}
+                                        </h3>
+                                        <p className="text-gray-600">
+                                            {step.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
 
                 {/* Services Section */}
                 <section className="py-20 bg-gray-50">
@@ -71,6 +114,23 @@ const Home = () => {
                                 />
                             ))}
                         </div>
+                    </div>
+                </section>
+
+                {/* Destinos Section */}
+                <section className="py-24 bg-white">
+                    <div className="container mx-auto px-8 max-w-7xl">
+                        <div className="text-center mb-16">
+                            <h2 className="text-4xl font-bold mb-6">
+                                Destinos em destaque
+                            </h2>
+                            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+                                Descubra lugares incríveis com as melhores
+                                ofertas
+                            </p>
+                        </div>
+
+                        {/* Adicionar cards de destinos em destaque aqui */}
                     </div>
                 </section>
             </main>
