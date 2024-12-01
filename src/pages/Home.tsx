@@ -1,4 +1,5 @@
 import ServiceCard from '../components/ServiceCard';
+import Search from '../components/Search/Search';
 
 const Home = () => {
     const services = [
@@ -43,6 +44,9 @@ const Home = () => {
                         />
                     </div>
                 </section>
+
+                {/* Search Section */}
+                <Search />
 
                 {/* Services Section */}
                 <section className="py-20 bg-gray-50">
