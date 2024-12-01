@@ -1,61 +1,98 @@
-import { Routes, Route } from 'react-router-dom';
-import { Suspense } from 'react';
-import { routes } from './router';
-import MainHeader from '../components/Header/MainHeader';
-import Footer from '../components/Footer';
+// routes/AppRoutes.tsx
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
+import ScrollToTop from '../components/ScrollToTop';
+import Layout from '../components/Layout';
+import LoadingSpinner from '../components/LoadingSpinner';
+import Home from '../pages/Home';
+import NotFound from '../pages/NotFound';
 
-function LoadingSpinner() {
+// Lazy loading
+const Login = lazy(() => import('../pages/Login'));
+const Signup = lazy(() => import('../pages/Signup'));
+const Contato = lazy(() => import('../pages/Contato'));
+const Sobre = lazy(() => import('../pages/Sobre'));
+
+// Componente para rotas protegidas (será usado posteriormente)
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAuthenticated = false; // Aqui você implementará sua lógica de autenticação
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
+// Componente para lazy loading
+const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-    </div>
+    <Suspense fallback={<LoadingSpinner />}>
+      {children}
+    </Suspense>
   );
-}
+};
 
 export function AppRoutes() {
-    const renderRouteElement = (Element: React.ComponentType) => {
-        const Component = () => {
-            return (
-                <Suspense fallback={<LoadingSpinner />}>
-                    <Element />
-                </Suspense>
-            );
-        };
-        return <Component />;
-    };
+  return (
+    <>
+      <ScrollToTop />
+      <Routes>
+        {/* Rotas Públicas */}
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route 
+            path="contato" 
+            element={
+              <SuspenseWrapper>
+                <Contato />
+              </SuspenseWrapper>
+            } 
+          />
+          <Route 
+            path="sobre" 
+            element={
+              <SuspenseWrapper>
+                <Sobre />
+              </SuspenseWrapper>
+            } 
+          />
+          
+          {/* Rotas de Autenticação */}
+          <Route 
+            path="login" 
+            element={
+              <SuspenseWrapper>
+                <Login />
+              </SuspenseWrapper>
+            } 
+          />
+          <Route 
+            path="signup" 
+            element={
+              <SuspenseWrapper>
+                <Signup />
+              </SuspenseWrapper>
+            } 
+          />
 
-    const renderRoute = (route: { path: string; element: React.ComponentType; children?: { path: string; element: React.ComponentType }[] }) => {
-        if (route.children) {
-            return (
-                <Route
-                    key={route.path}
-                    path={route.path}
-                    element={renderRouteElement(route.element)}
-                >
-                    {route.children.map((child) => (
-                        <Route
-                            key={`${route.path}/${child.path}`}
-                            path={child.path}
-                            element={renderRouteElement(child.element)}
-                        />
-                    ))}
-                </Route>
-            );
-        }
-        return (
-            <Route
-                key={route.path}
-                path={route.path}
-                element={renderRouteElement(route.element)}
-            />
-        );
-    };
+          {/* Exemplo de Rota Protegida (implementar depois) */}
+          <Route
+            path="dashboard"
+            element={
+              <ProtectedRoute>
+                <SuspenseWrapper>
+                  {/* Seu componente protegido aqui */}
+                  <div>Protected Component</div>
+                </SuspenseWrapper>
+              </ProtectedRoute>
+            }
+          />
 
-    return (
-        <>
-            <MainHeader />
-            <Routes>{routes.map(renderRoute)}</Routes>
-            <Footer />
-        </>
-    );
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </>
+  );
 }
