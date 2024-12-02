@@ -36,6 +36,8 @@ const HeroCarousel = () => {
     const settings = {
         dots: true,
         infinite: true,
+        fade: true,
+        cssEase: 'linear',
         speed: 500,
         slidesToShow: 1,
         slidesToScroll: 1,
@@ -78,7 +80,7 @@ const HeroCarousel = () => {
                             </p>
                             <div className="w-full">
                                 <button className="w-full bg-black text-white px-8 py-4 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
-                                    Começar
+                                    Criar Roteiro
                                     <span className="text-xl">→</span>
                                 </button>
                             </div>
