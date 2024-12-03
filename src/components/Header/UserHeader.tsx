@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import useClickOutside from '../../hooks/useClickOutside';
 
 const UserHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,6 +17,12 @@ const UserHeader = () => {
     logout();
     setIsDropdownOpen(false);
   };
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  useClickOutside(dropdownRef, () => {
+    if (isDropdownOpen) setIsDropdownOpen(false);
+  });
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm">
@@ -44,7 +51,7 @@ const UserHeader = () => {
           </nav>
 
           <div className="hidden md:flex items-center space-x-4">
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
