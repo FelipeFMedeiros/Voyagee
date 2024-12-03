@@ -8,7 +8,10 @@ const DocumentsStep = ({ onChange }: DocumentsStepProps) => (
   <div className="space-y-4">
     <h3 className="text-lg font-medium mb-4">Documentação</h3>
     <p className="text-sm text-gray-600 mb-4">
-      Por favor, envie documentos que comprovem sua atuação como guia turístico
+      Por favor, envie documentos que comprovem sua atuação como guia turístico.
+    </p>
+    <p className="text-sm text-gray-600 mb-4">
+      Você poderá enviar seus documentos posteriormente através da sua página de perfil.
     </p>
     <input
       type="file"

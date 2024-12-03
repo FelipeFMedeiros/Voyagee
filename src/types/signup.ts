@@ -18,6 +18,7 @@ export interface FormData {
     streetAddress: string;
     number: string;
     complement?: string;
+    bairro?: string;
 }
 
 export interface FormErrors {
@@ -26,13 +27,15 @@ export interface FormErrors {
     email?: string;
     cpf?: string;
     phone?: string;
-    password?: string; // Adicionado
-    confirmPassword?: string; // Adicionado
-    terms?: string; // Adicionado
+    password?: string;
+    confirmPassword?: string;
+    terms?: string;
     country?: string;
     state?: string;
     city?: string;
     zipCode?: string;
     streetAddress?: string;
     number?: string;
+    submit?: string;
+    bairro?: string;
 }

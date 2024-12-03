@@ -1,6 +1,9 @@
+// hooks/useSignupForm.ts
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FormData, FormErrors, UserType } from '../types/signup';
 import { validateCPF, maskCPF } from '../utils/masks';
+import { register } from '../services/authService';
 
 const initialFormData: FormData = {
     userType: null,
@@ -20,12 +23,15 @@ const initialFormData: FormData = {
     streetAddress: '',
     number: '',
     complement: '',
+    bairro: '',
 };
 
 export const useSignupForm = () => {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState<FormData>(initialFormData);
     const [formErrors, setFormErrors] = useState<FormErrors>({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const navigate = useNavigate();
 
     const totalSteps = formData.userType === 'guide' ? 5 : 4;
 
@@ -86,6 +92,33 @@ export const useSignupForm = () => {
                     }
                 }
                 break;
+            case 4:
+                if (formData.userType === 'guide') {
+                    // Aqui você pode adicionar validação de documentos se necessário
+                }
+                break;
+            case 5:
+                if (!formData.password) {
+                    errors.password = 'Senha é obrigatória';
+                    isValid = false;
+                } else if (formData.password.length < 8) {
+                    errors.password = 'Senha deve ter no mínimo 8 caracteres';
+                    isValid = false;
+                }
+                
+                if (!formData.confirmPassword) {
+                    errors.confirmPassword = 'Confirmação de senha é obrigatória';
+                    isValid = false;
+                } else if (formData.password !== formData.confirmPassword) {
+                    errors.confirmPassword = 'As senhas não coincidem';
+                    isValid = false;
+                }
+
+                if (!formData.terms) {
+                    errors.terms = 'Você deve aceitar os termos';
+                    isValid = false;
+                }
+                break;
         }
         setFormErrors(errors);
         return isValid;
@@ -114,6 +147,31 @@ export const useSignupForm = () => {
         setStep(2);
     };
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!validateStep(totalSteps)) {
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            const response = await register(formData);
+            
+            if (response.success) {
+                navigate('/login');
+            }
+        } catch (error) {
+            const err = error as Error;
+            setFormErrors(prev => ({
+                ...prev,
+                submit: err.message
+            }));
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const handleNext = () => {
         if (validateStep(step)) {
             setStep((prev) => prev + 1);
@@ -130,11 +188,13 @@ export const useSignupForm = () => {
         totalSteps,
         formData,
         formErrors,
+        isSubmitting,
         handleChange,
         handleUserTypeSelect,
         handleNext,
         handleBack,
         validateStep,
+        handleSubmit,
         setFormData,
     };
 };
