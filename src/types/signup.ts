@@ -26,6 +26,9 @@ export interface FormErrors {
     email?: string;
     cpf?: string;
     phone?: string;
+    password?: string; // Adicionado
+    confirmPassword?: string; // Adicionado
+    terms?: string; // Adicionado
     country?: string;
     state?: string;
     city?: string;
