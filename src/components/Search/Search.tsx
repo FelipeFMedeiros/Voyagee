@@ -9,13 +9,13 @@ import PackageSearch from './PackageSearch';
 type SearchType = 'stays' | 'flights' | 'cars' | 'packages';
 
 const Search = () => {
-  const [activeSearch, setActiveSearch] = useState<SearchType>('stays');
+  const [activeSearch, setActiveSearch] = useState<SearchType>('packages');
 
   const searchTypes = [
+    { id: 'packages', label: 'Roteiros', icon: MapPin },
     { id: 'stays', label: 'Hotéis', icon: Building },
     { id: 'flights', label: 'Voos', icon: Plane },
     { id: 'cars', label: 'Carros', icon: Car },
-    { id: 'packages', label: 'Roteiros', icon: MapPin },
   ] as const;
 
   const renderSearchContent = () => {
