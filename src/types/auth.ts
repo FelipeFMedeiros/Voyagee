@@ -14,7 +14,7 @@ export interface User {
     nome: string;
     email: string;
     tipo: 'guia' | 'viajante';
-    role: 'user' | 'guide';
+    role: 'user' | 'guide' | 'admin';
     telefone?: string;
     data_nascimento?: string;
     biografia?: string;

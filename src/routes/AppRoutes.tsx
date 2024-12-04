@@ -16,6 +16,7 @@ const Sobre = lazy(() => import('../pages/Sobre'));
 const Roteiro = lazy(() => import('../pages/Roteiro'));
 const Dashboard = lazy(() => import('../pages/Dashboard'));
 const Profile = lazy(() => import('../pages/Profile'));
+const MeusRoteiros = lazy(() => import('../pages/MeusRoteiros'));
 
 const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>
@@ -50,6 +51,14 @@ export function AppRoutes() {
             <ProtectedRoute>
               <SuspenseWrapper>
                 <Profile />
+              </SuspenseWrapper>
+            </ProtectedRoute>
+          } />
+
+          <Route path="meus-roteiros" element={
+            <ProtectedRoute>
+              <SuspenseWrapper>
+                <MeusRoteiros />
               </SuspenseWrapper>
             </ProtectedRoute>
           } />
