@@ -43,19 +43,24 @@ export function EditPasseioModal({ isOpen, onClose, onSubmit, passeio }: EditPas
     e.preventDefault();
     if (!passeio) return;
 
+    if (isNaN(Number(formData.preco))) {
+      setError('Por favor, insira um preço válido');
+      return;
+    }
+  
     setLoading(true);
     setError('');
-
+  
     try {
       const dataToUpdate = {
         ...formData,
-        preco: Number(formData.preco),
+        preco: formData.preco, // Mantém como string
         duracao_horas: Number(formData.duracao_horas),
         capacidade_maxima: Number(formData.capacidade_maxima),
         inclui_refeicao: formData.inclui_refeicao ? 1 : 0,
         inclui_transporte: formData.inclui_transporte ? 1 : 0
       };
-
+  
       await onSubmit(passeio.id, dataToUpdate);
       onClose();
     } catch (err) {
