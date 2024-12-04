@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
-import { UserProfile, ProfileUpdateData } from '../types/user';
+import { UserProfile, ProfileUpdateData, ApiResponse } from '../types/user';
 import { Edit2, Save, X } from 'lucide-react';
 
 export default function Profile() {
