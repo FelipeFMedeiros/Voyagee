@@ -14,7 +14,7 @@ const Login = lazy(() => import('../pages/Login'));
 const Signup = lazy(() => import('../pages/Signup'));
 const Contato = lazy(() => import('../pages/Contato'));
 const Sobre = lazy(() => import('../pages/Sobre'));
-const Roteiro = lazy(() => import('../pages/Roteiro'));
+const Roteiros = lazy(() => import('../components/Roteiros/Roteiros'));
 const Profile = lazy(() => import('../pages/Profile'));
 const MeusRoteiros = lazy(() => import('../pages/MeusRoteiros'));
 
@@ -77,10 +77,10 @@ export function AppRoutes() {
                         }
                     />
                     <Route
-                        path="roteiro"
+                        path="roteiros"
                         element={
                             <SuspenseWrapper>
-                                <Roteiro />
+                                <Roteiros />
                             </SuspenseWrapper>
                         }
                     />
