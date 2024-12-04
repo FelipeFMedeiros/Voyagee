@@ -3,10 +3,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { userItemsService } from '../services/userItemsService';
 import { Destino, Passeio, Roteiro } from '../types/userItems';
 import { ItemCarousel } from '../components/ItemCarousel';
-import { MapPin, Clock, Users } from 'lucide-react';
+import { MapPin, Clock, Users, Pencil, Trash2 } from 'lucide-react';
 import { CreateDestinoModal } from '../components/modals/CreateDestinoModal';
 import { CreatePasseioModal } from '../components/modals/CreatePasseioModal';
 import { CreateRoteiroModal } from '../components/modals/CreateRoteiroModal';
+import { DeleteConfirmationModal } from '../components/modals/DeleteConfirmationModal';
+import { EditDestinoModal } from '../components/modals/EditDestinoModal';
 
 export default function MeusRoteiros() {
     const { user } = useAuth();
@@ -18,6 +20,15 @@ export default function MeusRoteiros() {
         passeios: true,
         roteiros: true,
     });
+
+    const [deleteModal, setDeleteModal] = useState<{
+        show: boolean;
+        destino: Destino | null;
+    }>({
+        show: false,
+        destino: null,
+    });
+    const [editingDestino, setEditingDestino] = useState<Destino | null>(null);
 
     // Estado para controlar a exibição dos modais
     const [modals, setModals] = useState({
@@ -90,23 +101,74 @@ export default function MeusRoteiros() {
         }
     };
 
+    const handleEditDestino = async (id: number, data: Partial<Destino>) => {
+        try {
+            await userItemsService.updateDestino(id, data);
+            await fetchUserItems();
+        } catch (error) {
+            console.error('Erro ao editar destino:', error);
+            throw error;
+        }
+    };
+
+    const handleDeleteDestino = (destino: Destino) => {
+        setDeleteModal({ show: true, destino });
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deleteModal.destino) return;
+
+        try {
+            await userItemsService.deleteDestino(deleteModal.destino.id);
+            await fetchUserItems(); // Recarregar a lista
+        } catch (error) {
+            console.error('Erro ao excluir destino:', error);
+            throw error;
+        }
+    };
+
     const renderDestino = (destino: Destino) => (
-        <div className="bg-white rounded-lg shadow-md p-4 h-full flex flex-col">
-            <h3 className="font-semibold text-lg mb-2 line-clamp-1">{destino.nome}</h3>
-            <div className="flex items-center text-gray-600 mb-2">
-                <MapPin className="min-w-4 h-4 mr-2" />
-                <span className="truncate">{`${destino.cidade}, ${destino.estado}`}</span>
+        <div className="bg-white rounded-lg shadow-md p-4 h-full flex flex-col relative group">
+            {/* Menu de ações */}
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="bg-white rounded-lg shadow-lg p-1 flex gap-1">
+                    <button
+                        onClick={() => setEditingDestino(destino)}
+                        className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Editar">
+                        <Pencil size={16} />
+                    </button>
+                    <button
+                        onClick={() => handleDeleteDestino(destino)}
+                        className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Excluir">
+                        <Trash2 size={16} />
+                    </button>
+                </div>
             </div>
-            {destino.descricao && (
-                <p className="text-gray-600 text-sm line-clamp-2 flex-grow">
-                    {destino.descricao}
-                </p>
-            )}
+
+            {/* Conteúdo existente */}
+            <h3 className="font-semibold text-lg mb-2 line-clamp-1 pr-12">
+                {destino.nome}
+            </h3>
+            <div className="flex flex-col gap-2 text-gray-600 text-sm flex-grow">
+                <div className="flex items-center text-gray-600 mb-2">
+                    <MapPin className="min-w-4 h-4 mr-2" />
+                    <span className="truncate">{`${destino.cidade}, ${destino.estado}`}</span>
+                </div>
+                {destino.descricao && (
+                    <p className="text-gray-600 text-sm line-clamp-2 flex-grow">
+                        {destino.descricao}
+                    </p>
+                )}
+            </div>
         </div>
     );
 
     const renderPasseio = (passeio: Passeio) => {
-        const getDifficultyColor = (nivel: 'facil' | 'moderado' | 'dificil') => {
+        const getDifficultyColor = (
+            nivel: 'facil' | 'moderado' | 'dificil',
+        ) => {
             switch (nivel) {
                 case 'facil':
                     return 'bg-green-100 text-green-800';
@@ -118,14 +180,16 @@ export default function MeusRoteiros() {
                     return 'bg-gray-100 text-gray-800';
             }
         };
-    
+
         return (
             <div className="bg-white rounded-lg shadow-md p-4 h-full flex flex-col">
-                <h3 className="font-semibold text-lg mb-2 line-clamp-1">{passeio.nome}</h3>
+                <h3 className="font-semibold text-lg mb-2 line-clamp-1">
+                    {passeio.nome}
+                </h3>
                 <div className="flex flex-col gap-3 text-gray-600 text-sm flex-grow">
                     {/* Descrição */}
                     <p className="line-clamp-2">{passeio.descricao}</p>
-    
+
                     {/* Informações básicas */}
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center">
@@ -134,15 +198,23 @@ export default function MeusRoteiros() {
                         </div>
                         <div className="flex items-center">
                             <Users className="min-w-4 h-4 mr-2" />
-                            <span>Máx: {passeio.capacidade_maxima} pessoas</span>
+                            <span>
+                                Máx: {passeio.capacidade_maxima} pessoas
+                            </span>
                         </div>
                     </div>
-    
+
                     {/* Inclusões e Nível de Dificuldade */}
                     <div className="flex flex-wrap gap-2">
                         {passeio.inclui_refeicao === 1 && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-3 w-3 mr-1"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2">
                                     <path d="M18 6L6 12H2v3h4l12 6v-4m0-13v4" />
                                     <path d="M6 15h4" />
                                     <path d="M2 9h4" />
@@ -152,8 +224,20 @@ export default function MeusRoteiros() {
                         )}
                         {passeio.inclui_transporte === 1 && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <rect x="3" y="8" width="18" height="12" rx="2" />
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-3 w-3 mr-1"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2">
+                                    <rect
+                                        x="3"
+                                        y="8"
+                                        width="18"
+                                        height="12"
+                                        rx="2"
+                                    />
                                     <path d="M6 21v-4" />
                                     <path d="M18 21v-4" />
                                     <path d="M3 14h18" />
@@ -161,38 +245,57 @@ export default function MeusRoteiros() {
                                 Transporte
                             </span>
                         )}
-                        <span className={`
+                        <span
+                            className={`
                             inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                             ${getDifficultyColor(passeio.nivel_dificuldade)}
                         `}>
                             {passeio.nivel_dificuldade === 'facil' && (
-                                <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg
+                                    className="w-3 h-3 mr-1"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2">
                                     <path d="M8 14s1.5 2 4 2 4-2 4-2" />
                                     <circle cx="12" cy="12" r="10" />
                                 </svg>
                             )}
                             {passeio.nivel_dificuldade === 'moderado' && (
-                                <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg
+                                    className="w-3 h-3 mr-1"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2">
                                     <path d="M8 15h8" />
                                     <circle cx="12" cy="12" r="10" />
                                 </svg>
                             )}
                             {passeio.nivel_dificuldade === 'dificil' && (
-                                <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg
+                                    className="w-3 h-3 mr-1"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2">
                                     <path d="M8 9s1.5 2 4 2 4-2 4-2" />
                                     <circle cx="12" cy="12" r="10" />
                                 </svg>
                             )}
-                            {passeio.nivel_dificuldade.charAt(0).toUpperCase() + passeio.nivel_dificuldade.slice(1)}
+                            {passeio.nivel_dificuldade.charAt(0).toUpperCase() +
+                                passeio.nivel_dificuldade.slice(1)}
                         </span>
                     </div>
-    
+
                     {/* Localização */}
                     <div className="flex items-center text-xs text-gray-500">
                         <MapPin className="h-3 w-3 mr-1" />
-                        <span className="truncate">{passeio.cidade}, {passeio.estado}</span>
+                        <span className="truncate">
+                            {passeio.cidade}, {passeio.estado}
+                        </span>
                     </div>
-    
+
                     {/* Preço */}
                     <div className="text-lg font-semibold text-blue-600 mt-auto">
                         R$ {Number(passeio.preco).toFixed(2)}
@@ -237,7 +340,8 @@ export default function MeusRoteiros() {
                                 : 'bg-red-100 text-red-800'
                         }
                     `}>
-                    {roteiro.status.charAt(0).toUpperCase() + roteiro.status.slice(1)}
+                    {roteiro.status.charAt(0).toUpperCase() +
+                        roteiro.status.slice(1)}
                 </span>
             </div>
         </div>
@@ -245,7 +349,9 @@ export default function MeusRoteiros() {
 
     return (
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-            <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Meus Roteiros</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">
+                Meus Roteiros
+            </h1>
 
             <div className="space-y-8 sm:space-y-12">
                 <ItemCarousel
@@ -253,7 +359,9 @@ export default function MeusRoteiros() {
                     items={destinos}
                     renderItem={renderDestino}
                     loading={loading.destinos}
-                    onCreateNew={() => setModals(prev => ({ ...prev, destino: true }))}
+                    onCreateNew={() =>
+                        setModals((prev) => ({ ...prev, destino: true }))
+                    }
                 />
 
                 <ItemCarousel
@@ -261,7 +369,9 @@ export default function MeusRoteiros() {
                     items={passeios}
                     renderItem={renderPasseio}
                     loading={loading.passeios}
-                    onCreateNew={() => setModals(prev => ({ ...prev, passeio: true }))}
+                    onCreateNew={() =>
+                        setModals((prev) => ({ ...prev, passeio: true }))
+                    }
                 />
 
                 <ItemCarousel
@@ -269,7 +379,9 @@ export default function MeusRoteiros() {
                     items={roteiros}
                     renderItem={renderRoteiro}
                     loading={loading.roteiros}
-                    onCreateNew={() => setModals(prev => ({ ...prev, roteiro: true }))}
+                    onCreateNew={() =>
+                        setModals((prev) => ({ ...prev, roteiro: true }))
+                    }
                 />
             </div>
 
@@ -298,6 +410,20 @@ export default function MeusRoteiros() {
                 }
                 onSubmit={handleCreateRoteiro}
                 passeios={passeios}
+            />
+
+            <EditDestinoModal
+                isOpen={editingDestino !== null}
+                onClose={() => setEditingDestino(null)}
+                onSubmit={handleEditDestino}
+                destino={editingDestino}
+            />
+            <DeleteConfirmationModal
+                isOpen={deleteModal.show}
+                onClose={() => setDeleteModal({ show: false, destino: null })}
+                onConfirm={handleConfirmDelete}
+                title="Excluir Destino"
+                message={`Tem certeza que deseja excluir o destino "${deleteModal.destino?.nome}"? Esta ação não pode ser desfeita.`}
             />
         </div>
     );

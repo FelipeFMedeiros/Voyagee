@@ -58,4 +58,14 @@ export const userItemsService = {
         const response = await api.post('/roteiros', data);
         return response.data;
     },
+
+    async updateDestino(id: number, data: Partial<Destino>) {
+        const response = await api.patch(`/destinos/${id}`, data);
+        return response.data;
+    },
+
+    async deleteDestino(id: number) {
+        const response = await api.delete(`/destinos/${id}`);
+        return response.data;
+    },
 };
