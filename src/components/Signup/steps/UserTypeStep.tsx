@@ -1,12 +1,13 @@
+// components/Signup/steps/UserTypeStep.tsx
 import { User, MapPin } from 'lucide-react';
-import { UserType, FormErrors } from '../../types/signup';
+import { UserType, FormErrors } from '../../../types/signup';
 
 interface UserTypeStepProps {
     onSelect: (type: UserType) => void;
-    errors?: FormErrors;
+    errors: FormErrors;
 }
 
-export const UserTypeStep = ({ onSelect, errors = {} }: UserTypeStepProps) => (
+const UserTypeStep = ({ onSelect, errors }: UserTypeStepProps) => (
     <div className="space-y-4">
         <h3 className="text-lg font-medium text-center mb-6">
             Você é um viajante ou guia turístico?
@@ -17,7 +18,8 @@ export const UserTypeStep = ({ onSelect, errors = {} }: UserTypeStepProps) => (
                 onClick={() => onSelect('tourist')}
                 className={`p-6 border rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-center ${
                     errors.userType ? 'border-red-500' : ''
-                }`}>
+                }`}
+            >
                 <User className="mx-auto h-8 w-8 mb-2" />
                 <span className="font-medium">Viajante</span>
             </button>
@@ -26,7 +28,8 @@ export const UserTypeStep = ({ onSelect, errors = {} }: UserTypeStepProps) => (
                 onClick={() => onSelect('guide')}
                 className={`p-6 border rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-center ${
                     errors.userType ? 'border-red-500' : ''
-                }`}>
+                }`}
+            >
                 <MapPin className="mx-auto h-8 w-8 mb-2" />
                 <span className="font-medium">Guia Turístico</span>
             </button>
@@ -36,3 +39,5 @@ export const UserTypeStep = ({ onSelect, errors = {} }: UserTypeStepProps) => (
         )}
     </div>
 );
+
+export default UserTypeStep;
