@@ -1,5 +1,6 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
+import { Helmet } from 'react-helmet';
 import { AuthProvider } from '../contexts/AuthContext';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import ScrollToTop from '../components/ScrollToTop';
@@ -14,59 +15,121 @@ const Signup = lazy(() => import('../pages/Signup'));
 const Contato = lazy(() => import('../pages/Contato'));
 const Sobre = lazy(() => import('../pages/Sobre'));
 const Roteiro = lazy(() => import('../pages/Roteiro'));
-const Dashboard = lazy(() => import('../pages/Dashboard'));
 const Profile = lazy(() => import('../pages/Profile'));
 const MeusRoteiros = lazy(() => import('../pages/MeusRoteiros'));
 
+// Mapeamento de rotas para títulos
+const getTitleByPath = (pathname: string): string => {
+    switch (pathname) {
+        case '/':
+            return 'Melhore a sua experiência na hora de viajar';
+        case '/login':
+            return 'Fazer Login';
+        case '/signup':
+            return 'Cadastrar Usuário';
+        case '/contato':
+            return 'Contato';
+        case '/sobre':
+            return 'Sobre';
+        case '/roteiro':
+            return 'Roteiro';
+        case '/profile':
+            return 'Perfil';
+        case '/meus-roteiros':
+            return 'Meus Roteiros';
+        default:
+            return 'Voyagee';
+    }
+};
+
 const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>
+    <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>
 );
 
 export function AppRoutes() {
-  return (
-    <AuthProvider>
-      <ScrollToTop />
-      <Routes>
-        {/* Rotas Públicas */}
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="contato" element={<SuspenseWrapper><Contato /></SuspenseWrapper>} />
-          <Route path="sobre" element={<SuspenseWrapper><Sobre /></SuspenseWrapper>} />
-          <Route path="roteiro" element={<SuspenseWrapper><Roteiro /></SuspenseWrapper>} />
-          
-          {/* Rotas de Autenticação */}
-          <Route path="login" element={<SuspenseWrapper><Login /></SuspenseWrapper>} />
-          <Route path="signup" element={<SuspenseWrapper><Signup /></SuspenseWrapper>} />
+    const location = useLocation();
+    const pageTitle = getTitleByPath(location.pathname);
 
-          {/* Rotas Protegidas */}
-          <Route path="dashboard" element={
-            <ProtectedRoute>
-              <SuspenseWrapper>
-                <Dashboard />
-              </SuspenseWrapper>
-            </ProtectedRoute>
-          } />
+    return (
+        <AuthProvider>
+            <Helmet>
+                <title>Voyagee | {pageTitle}</title>
+            </Helmet>
+            <ScrollToTop />
+            <Routes>
+                {/* Rotas Públicas */}
+                <Route path="/" element={<Layout />}>
+                    <Route index element={<Home />} />
+                    <Route
+                        path="contato"
+                        element={
+                            <SuspenseWrapper>
+                                <Contato />
+                            </SuspenseWrapper>
+                        }
+                    />
+                    <Route
+                        path="sobre"
+                        element={
+                            <SuspenseWrapper>
+                                <Sobre />
+                            </SuspenseWrapper>
+                        }
+                    />
+                    <Route
+                        path="roteiro"
+                        element={
+                            <SuspenseWrapper>
+                                <Roteiro />
+                            </SuspenseWrapper>
+                        }
+                    />
 
-          <Route path="profile" element={
-            <ProtectedRoute>
-              <SuspenseWrapper>
-                <Profile />
-              </SuspenseWrapper>
-            </ProtectedRoute>
-          } />
+                    {/* Rotas de Autenticação */}
+                    <Route
+                        path="login"
+                        element={
+                            <SuspenseWrapper>
+                                <Login />
+                            </SuspenseWrapper>
+                        }
+                    />
+                    <Route
+                        path="signup"
+                        element={
+                            <SuspenseWrapper>
+                                <Signup />
+                            </SuspenseWrapper>
+                        }
+                    />
 
-          <Route path="meus-roteiros" element={
-            <ProtectedRoute>
-              <SuspenseWrapper>
-                <MeusRoteiros />
-              </SuspenseWrapper>
-            </ProtectedRoute>
-          } />
+                    {/* Rotas Protegidas */}
+                    <Route
+                        path="profile"
+                        element={
+                            <ProtectedRoute>
+                                <SuspenseWrapper>
+                                    <Profile />
+                                </SuspenseWrapper>
+                            </ProtectedRoute>
+                        }
+                    />
 
-          {/* 404 */}
-          <Route path="*" element={<NotFound />} />
-        </Route>
-      </Routes>
-    </AuthProvider>
-  );
+                    <Route
+                        path="meus-roteiros"
+                        element={
+                            <ProtectedRoute>
+                                <SuspenseWrapper>
+                                    <MeusRoteiros />
+                                </SuspenseWrapper>
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* 404 */}
+                    <Route path="*" element={<NotFound />} />
+                </Route>
+            </Routes>
+        </AuthProvider>
+    );
 }
