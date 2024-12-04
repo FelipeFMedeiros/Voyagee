@@ -4,31 +4,33 @@ export interface Destino {
     estado: string;
     cidade: string;
     descricao?: string;
-    latitude?: number;
-    longitude?: number;
+    latitude?: string;
+    longitude?: string;
 }
 
 export interface Passeio {
     id: number;
     nome: string;
     descricao: string;
-    preco: number;
+    preco: string;
     duracao_horas: number;
-    nivel_dificuldade?: 'facil' | 'moderado' | 'dificil';
-    inclui_refeicao: boolean;
-    inclui_transporte: boolean;
+    nivel_dificuldade: 'facil' | 'moderado' | 'dificil';
+    inclui_refeicao: number;
+    inclui_transporte: number;
     destino_id: number;
     capacidade_maxima: number;
 }
 
 export interface Roteiro {
     id: number;
-    passeioId: number;
+    passeio_id: number;
     data: string;
-    horaInicio: string;
-    horaFim: string;
-    vagasDisponiveis: number;
+    hora_inicio: string;
+    hora_fim: string;
     status: 'agendado' | 'confirmado' | 'concluido' | 'cancelado';
+    vagas_disponiveis: number;
+    passeio_nome?: string;
+    passeio_descricao?: string;
 }
 
 export interface PaginationData {
@@ -42,6 +44,8 @@ export interface PaginationData {
 
 export interface ApiResponse<T> {
     success: boolean;
-    data: T[];
+    roteiros?: T[];
+    passeios?: T[];
+    destinos?: T[];
     pagination: PaginationData;
 }

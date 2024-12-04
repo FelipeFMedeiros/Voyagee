@@ -77,7 +77,7 @@ export default function MeusRoteiros() {
                     <span>Máx: {passeio.capacidade_maxima} pessoas</span>
                 </div>
                 <div className="text-lg font-semibold text-blue-600">
-                    R$ {passeio.preco.toFixed(2)}
+                    R$ {Number(passeio.preco).toFixed(2)}
                 </div>
             </div>
         </div>
@@ -86,32 +86,38 @@ export default function MeusRoteiros() {
     const renderRoteiro = (roteiro: Roteiro) => (
         <div className="bg-white rounded-lg shadow-md p-4">
             <h3 className="font-semibold text-lg mb-2">
-                Roteiro {new Date(roteiro.data).toLocaleDateString()}
+                {roteiro.passeio_nome || 'Roteiro'} -{' '}
+                {new Date(roteiro.data).toLocaleDateString()}
             </h3>
             <div className="flex flex-col gap-2 text-gray-600 text-sm">
                 <div className="flex items-center">
                     <Clock className="w-4 h-4 mr-2" />
                     <span>
-                        {roteiro.horaInicio} - {roteiro.horaFim}
+                        {roteiro.hora_inicio} - {roteiro.hora_fim}
                     </span>
                 </div>
                 <div className="flex items-center">
                     <Users className="w-4 h-4 mr-2" />
-                    <span>{roteiro.vagasDisponiveis} vagas disponíveis</span>
+                    <span>{roteiro.vagas_disponiveis} vagas disponíveis</span>
                 </div>
+                {roteiro.passeio_descricao && (
+                    <p className="text-sm text-gray-600 line-clamp-2">
+                        {roteiro.passeio_descricao}
+                    </p>
+                )}
                 <span
                     className={`
-          px-2 py-1 rounded-full text-xs font-medium
-          ${
-              roteiro.status === 'agendado'
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : roteiro.status === 'confirmado'
-                  ? 'bg-green-100 text-green-800'
-                  : roteiro.status === 'concluido'
-                  ? 'bg-blue-100 text-blue-800'
-                  : 'bg-red-100 text-red-800'
-          }
-        `}>
+                        px-2 py-1 rounded-full text-xs font-medium
+                        ${
+                            roteiro.status === 'agendado'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : roteiro.status === 'confirmado'
+                                ? 'bg-green-100 text-green-800'
+                                : roteiro.status === 'concluido'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-red-100 text-red-800'
+                        }
+                    `}>
                     {roteiro.status.charAt(0).toUpperCase() +
                         roteiro.status.slice(1)}
                 </span>
