@@ -21,6 +21,13 @@ export const userItemsService = {
             data: response.data.destinos || [],
         };
     },
+    async getAllDestinos() {
+        const response = await api.get<ApiResponse<Destino>>('/destinos');
+        return {
+            ...response.data,
+            data: response.data.destinos || [],
+        };
+    },
 
     async getPasseios(userId: number, params?: FetchParams) {
         const response = await api.get<ApiResponse<Passeio>>(

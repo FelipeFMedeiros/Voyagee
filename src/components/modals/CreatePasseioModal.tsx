@@ -1,16 +1,16 @@
 // components/modals/CreatePasseioModal.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { Destino } from '../../types/userItems';
+import { userItemsService } from '../../services/userItemsService';
 
 interface CreatePasseioModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
-  destinos: Destino[];
 }
 
-export function CreatePasseioModal({ isOpen, onClose, onSubmit, destinos }: CreatePasseioModalProps) {
+export function CreatePasseioModal({ isOpen, onClose, onSubmit }: CreatePasseioModalProps) {
   const initialFormState = {
     nome: '',
     descricao: '',
@@ -25,6 +25,22 @@ export function CreatePasseioModal({ isOpen, onClose, onSubmit, destinos }: Crea
 
   const [formData, setFormData] = useState(initialFormState);
   const [loading, setLoading] = useState(false);
+  const [allDestinos, setAllDestinos] = useState<Destino[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchAllDestinos();
+    }
+  }, [isOpen]);
+
+  const fetchAllDestinos = async () => {
+    try {
+      const response = await userItemsService.getAllDestinos();
+      setAllDestinos(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar destinos:', error);
+    }
+  };
 
   const resetForm = () => {
     setFormData(initialFormState);
@@ -34,15 +50,17 @@ export function CreatePasseioModal({ isOpen, onClose, onSubmit, destinos }: Crea
     e.preventDefault();
     setLoading(true);
     try {
-      await onSubmit({
+      const dataToSubmit = {
         ...formData,
-        preco: Number(formData.preco),
-        duracao_horas: Number(formData.duracao_horas),
-        destino_id: Number(formData.destino_id),
-        capacidade_maxima: Number(formData.capacidade_maxima),
+        preco: parseFloat(formData.preco),
+        duracao_horas: parseInt(formData.duracao_horas as string),
+        capacidade_maxima: parseInt(formData.capacidade_maxima as string),
         inclui_refeicao: formData.inclui_refeicao ? 1 : 0,
-        inclui_transporte: formData.inclui_transporte ? 1 : 0
-      });
+        inclui_transporte: formData.inclui_transporte ? 1 : 0,
+        destino_id: parseInt(formData.destino_id as string)
+      };
+      
+      await onSubmit(dataToSubmit);
       resetForm();
       onClose();
     } catch (error) {
@@ -52,13 +70,14 @@ export function CreatePasseioModal({ isOpen, onClose, onSubmit, destinos }: Crea
     }
   };
 
+  if (!isOpen) return null;
+
   const handleClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
   };
 
-  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleClickOutside}>
@@ -143,24 +162,22 @@ export function CreatePasseioModal({ isOpen, onClose, onSubmit, destinos }: Crea
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Destino
-            </label>
-            <select
-              value={formData.destino_id}
-              onChange={e => setFormData(prev => ({ ...prev, destino_id: e.target.value }))}
-              className="w-full rounded-lg border border-gray-300 p-2"
-              required
-            >
-              <option value="">Selecione um destino</option>
-              {destinos.map(destino => (
-                <option key={destino.id} value={destino.id}>
-                  {destino.nome} - {destino.cidade}, {destino.estado}
-                </option>
-              ))}
-            </select>
-          </div>
+            <div>
+              <label className="block mb-1">Destino</label>
+              <select
+                value={formData.destino_id}
+                onChange={e => setFormData(prev => ({ ...prev, destino_id: e.target.value }))}
+                className="w-full rounded-lg border border-gray-300 p-2"
+                required
+              >
+                <option value="">Selecione um destino</option>
+                {allDestinos.map(destino => (
+                  <option key={destino.id} value={destino.id}>
+                    {destino.nome} - {destino.cidade}, {destino.estado}
+                  </option>
+                ))}
+              </select>
+            </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
