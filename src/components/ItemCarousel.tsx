@@ -1,5 +1,5 @@
 // components/ItemCarousel.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 
 interface ItemCarouselProps<T> {
@@ -11,18 +11,42 @@ interface ItemCarouselProps<T> {
 }
 
 export function ItemCarousel<T>({ 
-  items = [], // Valor default para items
+  items = [],
   renderItem, 
   title, 
   onCreateNew,
   loading = false
 }: ItemCarouselProps<T>) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const itemsPerPage = 3;
+  const [itemsPerPage, setItemsPerPage] = useState(3);
 
-  // Só calculamos isso se tivermos items
-  const canScrollLeft = items.length > 0 && currentIndex > 0;
-  const canScrollRight = items.length > 0 && currentIndex + itemsPerPage < items.length;
+  // Ajusta itemsPerPage baseado no tamanho da tela
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth < 640) { // sm
+        setItemsPerPage(1);
+      } else if (window.innerWidth < 1024) { // md
+        setItemsPerPage(2);
+      } else { // lg e acima
+        setItemsPerPage(3);
+      }
+    }
+
+    handleResize(); // Chama uma vez ao montar
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Ajusta o currentIndex quando itemsPerPage muda
+  useEffect(() => {
+    const maxIndex = Math.max(0, items.length - itemsPerPage);
+    if (currentIndex > maxIndex) {
+      setCurrentIndex(maxIndex);
+    }
+  }, [itemsPerPage, items.length, currentIndex]);
+
+  const canScrollLeft = currentIndex > 0;
+  const canScrollRight = currentIndex + itemsPerPage < items.length;
 
   const handlePrevious = () => {
     if (canScrollLeft) {
@@ -46,7 +70,7 @@ export function ItemCarousel<T>({
             className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Criar Novo
+            <span className="hidden sm:inline">Criar Novo</span>
           </button>
         )}
       </div>
@@ -57,11 +81,18 @@ export function ItemCarousel<T>({
         </div>
       ) : items?.length > 0 ? (
         <div className="relative">
-          <div className="flex gap-4 overflow-hidden">
+          <div className="flex gap-4">
             {items
               .slice(currentIndex, currentIndex + itemsPerPage)
               .map((item, index) => (
-                <div key={index} className="flex-1 min-w-0">
+                <div 
+                  key={index} 
+                  className="flex-1 min-w-0"
+                  style={{ 
+                    width: `${100 / itemsPerPage}%`,
+                    transition: 'all 0.3s ease-in-out'
+                  }}
+                >
                   {renderItem(item)}
                 </div>
               ))}
@@ -88,6 +119,23 @@ export function ItemCarousel<T>({
       ) : (
         <div className="flex justify-center items-center h-48 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
           <p className="text-gray-500">Nenhum item encontrado</p>
+        </div>
+      )}
+
+      {/* Indicadores de página */}
+      {items.length > itemsPerPage && (
+        <div className="flex justify-center mt-4 gap-2">
+          {Array.from({ length: Math.ceil(items.length / itemsPerPage) }).map((_, index) => (
+            <button
+              key={index}
+              className={`w-2 h-2 rounded-full transition-all ${
+                Math.floor(currentIndex / itemsPerPage) === index
+                  ? 'bg-blue-500 w-4'
+                  : 'bg-gray-300'
+              }`}
+              onClick={() => setCurrentIndex(index * itemsPerPage)}
+            />
+          ))}
         </div>
       )}
     </div>

@@ -18,7 +18,17 @@ export interface Passeio {
     inclui_refeicao: number;
     inclui_transporte: number;
     destino_id: number;
+    guia_id: number;
     capacidade_maxima: number;
+    created_at: string;
+    updated_at: string;
+    pessoa_id: number;
+    destino_nome: string;
+    cidade: string;
+    estado: string;
+    criador_nome: string;
+    criador_email: string;
+    criador_eh_guia: number;
 }
 
 export interface Roteiro {
