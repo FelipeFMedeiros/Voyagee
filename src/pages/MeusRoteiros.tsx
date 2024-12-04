@@ -9,6 +9,8 @@ import { CreatePasseioModal } from '../components/modals/CreatePasseioModal';
 import { CreateRoteiroModal } from '../components/modals/CreateRoteiroModal';
 import { DeleteConfirmationModal } from '../components/modals/DeleteConfirmationModal';
 import { EditDestinoModal } from '../components/modals/EditDestinoModal';
+import { EditPasseioModal } from '../components/modals/EditPasseioModal';
+import { EditRoteiroModal } from '../components/modals/editRoteiroModal';
 
 export default function MeusRoteiros() {
     const { user } = useAuth();
@@ -23,12 +25,16 @@ export default function MeusRoteiros() {
 
     const [deleteModal, setDeleteModal] = useState<{
         show: boolean;
-        destino: Destino | null;
+        tipo: 'destino' | 'passeio' | 'roteiro' | null;
+        item: Destino | Passeio | Roteiro | null;
     }>({
         show: false,
-        destino: null,
+        tipo: null,
+        item: null,
     });
     const [editingDestino, setEditingDestino] = useState<Destino | null>(null);
+    const [editingPasseio, setEditingPasseio] = useState<Passeio | null>(null);
+    const [editingRoteiro, setEditingRoteiro] = useState<Roteiro | null>(null);
 
     // Estado para controlar a exibição dos modais
     const [modals, setModals] = useState({
@@ -66,6 +72,22 @@ export default function MeusRoteiros() {
                 passeios: false,
                 roteiros: false,
             });
+        }
+    };
+
+    const getItemName = (
+        item: Destino | Passeio | Roteiro,
+        tipo: 'destino' | 'passeio' | 'roteiro',
+    ): string => {
+        switch (tipo) {
+            case 'destino':
+                return (item as Destino).nome;
+            case 'passeio':
+                return (item as Passeio).nome;
+            case 'roteiro':
+                return (item as Roteiro).passeio_nome || '';
+            default:
+                return '';
         }
     };
 
@@ -111,18 +133,78 @@ export default function MeusRoteiros() {
         }
     };
 
+    const handleEditPasseio = async (id: number, data: Partial<Passeio>) => {
+        try {
+            await userItemsService.updatePasseio(id, data);
+            await fetchUserItems();
+        } catch (error) {
+            console.error('Erro ao editar passeio:', error);
+            throw error;
+        }
+    };
+
+    const handleEditRoteiro = async (id: number, data: Partial<Roteiro>) => {
+        try {
+            // Ajustando os nomes dos campos para o formato da API
+            const apiData = {
+                data: data.data,
+                horaInicio: data.hora_inicio,
+                horaFim: data.hora_fim,
+                status: data.status,
+                vagasDisponiveis: data.vagas_disponiveis,
+            };
+
+            await userItemsService.updateRoteiro(id, apiData);
+            await fetchUserItems();
+        } catch (error) {
+            console.error('Erro ao editar roteiro:', error);
+            throw error;
+        }
+    };
+
     const handleDeleteDestino = (destino: Destino) => {
-        setDeleteModal({ show: true, destino });
+        setDeleteModal({
+            show: true,
+            tipo: 'destino',
+            item: destino,
+        });
+    };
+
+    const handleDeletePasseio = (passeio: Passeio) => {
+        setDeleteModal({
+            show: true,
+            tipo: 'passeio',
+            item: passeio,
+        });
+    };
+
+    const handleDeleteRoteiro = (roteiro: Roteiro) => {
+        setDeleteModal({
+            show: true,
+            tipo: 'roteiro',
+            item: roteiro,
+        });
     };
 
     const handleConfirmDelete = async () => {
-        if (!deleteModal.destino) return;
+        if (!deleteModal.item || !deleteModal.tipo) return;
 
         try {
-            await userItemsService.deleteDestino(deleteModal.destino.id);
-            await fetchUserItems(); // Recarregar a lista
+            switch (deleteModal.tipo) {
+                case 'destino':
+                    await userItemsService.deleteDestino(deleteModal.item.id);
+                    break;
+                case 'passeio':
+                    await userItemsService.deletePasseio(deleteModal.item.id);
+                    break;
+                case 'roteiro':
+                    await userItemsService.deleteRoteiro(deleteModal.item.id);
+                    break;
+            }
+            await fetchUserItems();
+            setDeleteModal({ show: false, tipo: null, item: null });
         } catch (error) {
-            console.error('Erro ao excluir destino:', error);
+            console.error('Erro ao excluir item:', error);
             throw error;
         }
     };
@@ -182,8 +264,26 @@ export default function MeusRoteiros() {
         };
 
         return (
-            <div className="bg-white rounded-lg shadow-md p-4 h-full flex flex-col">
-                <h3 className="font-semibold text-lg mb-2 line-clamp-1">
+            <div className="bg-white rounded-lg shadow-md p-4 h-full flex flex-col relative group">
+                {/* Menu de ações */}
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <div className="bg-white rounded-lg shadow-lg p-1 flex gap-1">
+                        <button
+                            onClick={() => setEditingPasseio(passeio)}
+                            className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Editar">
+                            <Pencil size={16} />
+                        </button>
+                        <button
+                            onClick={() => handleDeletePasseio(passeio)}
+                            className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Excluir">
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
+                </div>
+
+                <h3 className="font-semibold text-lg mb-2 line-clamp-1 pr-12">
                     {passeio.nome}
                 </h3>
                 <div className="flex flex-col gap-3 text-gray-600 text-sm flex-grow">
@@ -306,8 +406,26 @@ export default function MeusRoteiros() {
     };
 
     const renderRoteiro = (roteiro: Roteiro) => (
-        <div className="bg-white rounded-lg shadow-md p-4 h-full flex flex-col">
-            <h3 className="font-semibold text-lg mb-2 line-clamp-2">
+        <div className="bg-white rounded-lg shadow-md p-4 h-full flex flex-col relative group">
+            {/* Menu de ações */}
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <div className="bg-white rounded-lg shadow-lg p-1 flex gap-1">
+                    <button
+                        onClick={() => setEditingRoteiro(roteiro)}
+                        className="p-1.5 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Editar">
+                        <Pencil size={16} />
+                    </button>
+                    <button
+                        onClick={() => handleDeleteRoteiro(roteiro)}
+                        className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Excluir">
+                        <Trash2 size={16} />
+                    </button>
+                </div>
+            </div>
+
+            <h3 className="font-semibold text-lg mb-2 line-clamp-2 pr-12">
                 {roteiro.passeio_nome || 'Roteiro'} -{' '}
                 {new Date(roteiro.data).toLocaleDateString()}
             </h3>
@@ -412,18 +530,53 @@ export default function MeusRoteiros() {
                 passeios={passeios}
             />
 
+            <DeleteConfirmationModal
+                isOpen={deleteModal.show}
+                onClose={() =>
+                    setDeleteModal({ show: false, tipo: null, item: null })
+                }
+                onConfirm={handleConfirmDelete}
+                title={`Excluir ${
+                    deleteModal.tipo === 'destino'
+                        ? 'Destino'
+                        : deleteModal.tipo === 'passeio'
+                        ? 'Passeio'
+                        : 'Roteiro'
+                }`}
+                message={
+                    deleteModal.item && deleteModal.tipo
+                        ? `Tem certeza que deseja excluir ${
+                              deleteModal.tipo === 'destino'
+                                  ? 'o destino'
+                                  : deleteModal.tipo === 'passeio'
+                                  ? 'o passeio'
+                                  : 'o roteiro'
+                          } "${getItemName(
+                              deleteModal.item,
+                              deleteModal.tipo,
+                          )}"? Esta ação não pode ser desfeita.`
+                        : ''
+                }
+            />
+
             <EditDestinoModal
                 isOpen={editingDestino !== null}
                 onClose={() => setEditingDestino(null)}
                 onSubmit={handleEditDestino}
                 destino={editingDestino}
             />
-            <DeleteConfirmationModal
-                isOpen={deleteModal.show}
-                onClose={() => setDeleteModal({ show: false, destino: null })}
-                onConfirm={handleConfirmDelete}
-                title="Excluir Destino"
-                message={`Tem certeza que deseja excluir o destino "${deleteModal.destino?.nome}"? Esta ação não pode ser desfeita.`}
+            <EditPasseioModal
+                isOpen={editingPasseio !== null}
+                onClose={() => setEditingPasseio(null)}
+                onSubmit={handleEditPasseio}
+                passeio={editingPasseio}
+            />
+            <EditRoteiroModal
+                isOpen={editingRoteiro !== null}
+                onClose={() => setEditingRoteiro(null)}
+                onSubmit={handleEditRoteiro}
+                roteiro={editingRoteiro}
+                passeios={passeios}
             />
         </div>
     );

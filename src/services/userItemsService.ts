@@ -68,4 +68,24 @@ export const userItemsService = {
         const response = await api.delete(`/destinos/${id}`);
         return response.data;
     },
+
+    async updatePasseio(id: number, data: Partial<Passeio>) {
+        const response = await api.patch(`/passeios/${id}`, data);
+        return response.data;
+      },
+    
+      async deletePasseio(id: number) {
+        const response = await api.delete(`/passeios/${id}`);
+        return response.data;
+      },
+
+      async updateRoteiro(id: number, data: Partial<Roteiro>) {
+        const response = await api.patch(`/roteiros/${id}`, data);
+        return response.data;
+      },
+    
+      async deleteRoteiro(id: number) {
+        const response = await api.delete(`/roteiros/${id}`);
+        return response.data;
+      }
 };
