@@ -71,7 +71,7 @@ const UserHeader = () => {
                   >
                     Meu Perfil
                   </Link>
-                  {user?.tipo === 'guia' && (
+                  
                     <Link
                       to="/meus-roteiros"
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
@@ -79,7 +79,7 @@ const UserHeader = () => {
                     >
                       Meus Roteiros
                     </Link>
-                  )}
+                  
                   <Link
                     to="/configuracoes"
                     className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
@@ -133,7 +133,7 @@ const UserHeader = () => {
             >
               Meu Perfil
             </Link>
-            {user?.tipo === 'guia' && (
+            
               <Link 
                 to="/meus-roteiros" 
                 className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
@@ -141,7 +141,7 @@ const UserHeader = () => {
               >
                 Meus Roteiros
               </Link>
-            )}
+            
             <Link 
               to="/configuracoes" 
               className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
