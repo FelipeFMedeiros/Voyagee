@@ -39,6 +39,13 @@ export const userItemsService = {
             data: response.data.passeios || [],
         };
     },
+    async getAllPasseios() {
+        const response = await api.get<ApiResponse<Passeio>>('/passeios');
+        return {
+            ...response.data,
+            data: response.data.passeios || [],
+        };
+    },
 
     async getRoteiros(userId: number, params?: FetchParams) {
         const response = await api.get<ApiResponse<Roteiro>>(
