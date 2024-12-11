@@ -59,3 +59,22 @@ export interface ApiResponse<T> {
     destinos?: T[];
     pagination: PaginationData;
 }
+
+export interface Avaliacao {
+    nota: string;
+    comentario: string;
+    created_at: string;
+    avaliador_nome: string;
+}
+
+export interface RoteiroDetalhado extends Roteiro {
+    destino_descricao: string;
+    latitude: string;
+    longitude: string;
+    avaliacao_media: string;
+    total_avaliacoes: number;
+    avaliacoes: Avaliacao[];
+    preco: string;
+    inclui_refeicao: number;
+    inclui_transporte: number;
+}
