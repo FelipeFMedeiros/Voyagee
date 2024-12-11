@@ -1,5 +1,16 @@
 export type UserType = 'tourist' | 'guide' | null;
 
+// Nova interface para representar o formato esperado pela API
+export interface ViajanteApiData {
+    nome: string;
+    cpf: string;
+    email: string;
+    telefone: string;
+    dtNascimento: null;
+    password: string;
+}
+
+// Interface FormData permanece a mesma
 export interface FormData {
     userType: UserType;
     name: string;
@@ -21,6 +32,7 @@ export interface FormData {
     bairro?: string;
 }
 
+// Interface FormErrors permanece a mesma
 export interface FormErrors {
     userType?: string;
     name?: string;

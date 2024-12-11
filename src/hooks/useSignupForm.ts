@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FormData, FormErrors, UserType } from '../types/signup';
 import { validateCPF, maskCPF } from '../utils/masks';
-import { register } from '../services/authService';
+import { register, registerViajante } from '../services/authService';
 
 const initialFormData: FormData = {
     userType: null,
@@ -153,10 +153,19 @@ export const useSignupForm = () => {
         if (!validateStep(totalSteps)) {
             return;
         }
-
+    
         try {
             setIsSubmitting(true);
-            const response = await register(formData);
+            let response;
+            
+            if (formData.userType === 'tourist') {
+                // Não precisa mais fazer conversão aqui, ela é feita dentro da função registerViajante
+                response = await registerViajante(formData);
+            } else if (formData.userType === 'guide') {
+                response = await register(formData);
+            } else {
+                throw new Error('Tipo de usuário inválido');
+            }
             
             if (response.success) {
                 navigate('/login');

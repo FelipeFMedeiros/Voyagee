@@ -1,4 +1,3 @@
-// services/authService.ts
 import api from './api';
 import { FormData } from '../types/signup';
 
@@ -26,6 +25,7 @@ interface RegisterGuideData extends BaseRegisterData {
     complement?: string;
     bairro: string;
 }
+
 type RegisterData = RegisterTouristData | RegisterGuideData;
 
 interface ApiResponse {
@@ -42,21 +42,31 @@ interface ApiError {
     message: string;
 }
 
+interface ViajanteRequestData {
+    nome: string;
+    cpf: string;
+    email: string;
+    telefone: string;
+    dtNascimento: null;
+    password: string;
+}
+
+const formatViajanteData = (formData: FormData): ViajanteRequestData => {
+    // Remova todos os caracteres especiais do CPF e telefone
+    const cpfClean = formData.cpf.replace(/[^\d]/g, '');
+    const phoneClean = formData.phone.replace(/[^\d]/g, '');
+
+    return {
+        nome: formData.name,
+        cpf: cpfClean,
+        email: formData.email,
+        telefone: phoneClean,
+        dtNascimento: null,
+        password: formData.password
+    };
+};
+
 const formatRegistrationData = (formData: FormData): RegisterData => {
-    // Adicionando console.log para debug
-    console.log('FormData recebido:', formData);
-
-    // Validação básica dos campos obrigatórios
-    if (
-        !formData.name ||
-        !formData.email ||
-        !formData.cpf ||
-        !formData.phone ||
-        !formData.password
-    ) {
-        throw new Error('Todos os campos obrigatórios devem ser preenchidos');
-    }
-
     const baseData = {
         userType: formData.userType === 'guide' ? 'guia' : 'viajante',
         name: formData.name.trim(),
@@ -65,9 +75,6 @@ const formatRegistrationData = (formData: FormData): RegisterData => {
         phone: formData.phone.replace(/\D/g, ''),
         password: formData.password,
     };
-
-    // Console.log para verificar os dados formatados
-    console.log('Dados formatados:', baseData);
 
     if (formData.userType === 'guide') {
         return {
@@ -92,14 +99,7 @@ const formatRegistrationData = (formData: FormData): RegisterData => {
 
 export const register = async (formData: FormData): Promise<ApiResponse> => {
     try {
-        // Console.log para verificar os dados antes de enviar
-        console.log('Dados a serem enviados para API:', formData);
-
         const data = formatRegistrationData(formData);
-
-        // Console.log para verificar os dados formatados
-        console.log('Dados formatados para API:', data);
-
         const response = await api.post<ApiResponse>('/auth/register', data);
         return response.data;
     } catch (error) {
@@ -109,5 +109,32 @@ export const register = async (formData: FormData): Promise<ApiResponse> => {
             throw new Error(apiError.response.data.message);
         }
         throw new Error('Erro ao realizar cadastro. Tente novamente.');
+    }
+};
+
+export const registerViajante = async (formData: FormData): Promise<ApiResponse> => {
+    try {
+        const data = formatViajanteData(formData);
+        
+        // Log para debug
+        console.log('Dados enviados para API:', data);
+
+        const response = await api.post<ApiResponse>('/pessoa', data);
+        return response.data;
+    } catch (error) {
+        console.error('Erro no registro de viajante:', error);
+        const apiError = error as ApiError;
+        
+        // Log detalhado do erro
+        console.log('Detalhes do erro:', {
+            message: apiError.message,
+            response: apiError.response,
+            fullError: error
+        });
+
+        if (apiError.response?.data?.message) {
+            throw new Error(apiError.response.data.message);
+        }
+        throw new Error('Erro ao realizar cadastro de viajante. Tente novamente.');
     }
 };
