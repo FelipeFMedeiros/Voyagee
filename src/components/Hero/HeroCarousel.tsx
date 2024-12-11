@@ -79,10 +79,10 @@ const HeroCarousel = () => {
                                 {destination.description}
                             </p>
                             <div className="w-full">
-                                <button className="w-full bg-black text-white px-8 py-4 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
+                                <a href="/meus-roteiros" className="w-full bg-black text-white px-8 py-4 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
                                     Criar Roteiro
                                     <span className="text-xl">→</span>
-                                </button>
+                                </a>
                             </div>
                         </div>
 
