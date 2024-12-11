@@ -1,9 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Star, Clock, Users, Coffee, Car, MapPin, AlertCircle } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+
+import {
+    X,
+    Star,
+    Clock,
+    Users,
+    Coffee,
+    Car,
+    MapPin,
+    AlertCircle,
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import { RoteiroDetalhado } from '../../types/userItems';
 import useClickOutside from '../../hooks/useClickOutside';
+import { StarRating } from '../StarRating';
 
 interface RoteiroDetalheModalProps {
     roteiro: RoteiroDetalhado;
@@ -16,7 +28,7 @@ export default function RoteiroDetalheModal({
     roteiro,
     isOpen,
     onClose,
-    onAvaliacaoSubmit
+    onAvaliacaoSubmit,
 }: RoteiroDetalheModalProps) {
     const { user } = useAuth();
     const modalRef = useRef<HTMLDivElement>(null);
@@ -25,7 +37,7 @@ export default function RoteiroDetalheModal({
         comentario: string;
     }>({
         nota: 5,
-        comentario: ''
+        comentario: '',
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -46,39 +58,61 @@ export default function RoteiroDetalheModal({
         };
     }, [isOpen]);
 
+    useEffect(() => {
+        if (user && showAvaliacaoForm) {
+            const jaAvaliou = roteiro.avaliacoes.some(
+                (a) => a.avaliador_nome === user.name,
+            );
+    
+            if (jaAvaliou) {
+                setShowAvaliacaoForm(false);
+                toast.error('Você já avaliou este roteiro anteriormente.');
+            }
+        }
+    }, [showAvaliacaoForm, user, roteiro.avaliacoes]);
+
     const usuarioJaAvaliou = roteiro.avaliacoes.some(
-        a => a.avaliador_nome === user?.name
+        (a) => a.avaliador_nome === user?.name,
     );
 
-    const podeAvaliar = !usuarioJaAvaliou && 
-                       roteiro.status === 'concluido' && 
-                       user !== null;
+    const podeAvaliar = !usuarioJaAvaliou && roteiro.status === 'concluido' && user !== null;
 
     const getStatusColor = (status: string) => {
         const colors = {
             agendado: 'bg-yellow-100 text-yellow-800',
             confirmado: 'bg-green-100 text-green-800',
             concluido: 'bg-blue-100 text-blue-800',
-            cancelado: 'bg-red-100 text-red-800'
+            cancelado: 'bg-red-100 text-red-800',
         };
         return colors[status as keyof typeof colors];
     };
-
+    interface ApiError {
+        response?: {
+          data?: {
+            message?: string;
+          };
+        };
+      }
     const handleSubmitAvaliacao = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
-
+    
         try {
             await api.post(`/roteiros/${roteiro.id}/avaliar`, {
                 nota: avaliacao.nota,
-                comentario: avaliacao.comentario
+                comentario: avaliacao.comentario,
             });
             setAvaliacao({ nota: 5, comentario: '' });
             setShowAvaliacaoForm(false);
             onAvaliacaoSubmit();
         } catch (err) {
-            setError('Não foi possível enviar sua avaliação. Tente novamente.');
+            const apiError = err as ApiError;
+            // Usa a mensagem da API se disponível, caso contrário usa mensagem padrão
+            const errorMessage = apiError.response?.data?.message || 
+                'Não foi possível enviar sua avaliação. Tente novamente.';
+            setError(errorMessage);
+            toast.error(errorMessage); // Opcional: mostrar o erro também como toast
         } finally {
             setLoading(false);
         }
@@ -88,10 +122,9 @@ export default function RoteiroDetalheModal({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div 
+            <div
                 ref={modalRef}
-                className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-modalEnter"
-            >
+                className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-modalEnter">
                 <div className="p-6 space-y-8">
                     {/* Header com Status */}
                     <div className="flex justify-between items-start">
@@ -103,18 +136,22 @@ export default function RoteiroDetalheModal({
                                 <div className="flex items-center">
                                     <MapPin className="w-4 h-4 text-gray-500 mr-1" />
                                     <span className="text-gray-600">
-                                        {roteiro.destino_nome} - {roteiro.cidade}, {roteiro.estado}
+                                        {roteiro.destino_nome} -{' '}
+                                        {roteiro.cidade}, {roteiro.estado}
                                     </span>
                                 </div>
-                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(roteiro.status)}`}>
-                                    {roteiro.status.charAt(0).toUpperCase() + roteiro.status.slice(1)}
+                                <span
+                                    className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                                        roteiro.status,
+                                    )}`}>
+                                    {roteiro.status.charAt(0).toUpperCase() +
+                                        roteiro.status.slice(1)}
                                 </span>
                             </div>
                         </div>
                         <button
                             onClick={onClose}
-                            className="text-gray-400 hover:text-gray-600 transition-colors"
-                        >
+                            className="text-gray-400 hover:text-gray-600 transition-colors">
                             <X size={24} />
                         </button>
                     </div>
@@ -127,11 +164,14 @@ export default function RoteiroDetalheModal({
                                     <div className="flex items-center gap-2">
                                         <Clock className="w-5 h-5 text-gray-500" />
                                         <span className="text-gray-700">
-                                            {new Date(roteiro.data).toLocaleDateString()}
+                                            {new Date(
+                                                roteiro.data,
+                                            ).toLocaleDateString()}
                                         </span>
                                     </div>
                                     <div className="text-gray-700">
-                                        {roteiro.hora_inicio} - {roteiro.hora_fim}
+                                        {roteiro.hora_inicio} -{' '}
+                                        {roteiro.hora_fim}
                                     </div>
                                 </div>
 
@@ -139,7 +179,8 @@ export default function RoteiroDetalheModal({
                                     <div className="flex items-center gap-2">
                                         <Users className="w-5 h-5 text-gray-500" />
                                         <span className="text-gray-700">
-                                            {roteiro.vagas_disponiveis} vagas disponíveis
+                                            {roteiro.vagas_disponiveis} vagas
+                                            disponíveis
                                         </span>
                                     </div>
                                     <span className="text-xl font-bold text-blue-600">
@@ -186,7 +227,8 @@ export default function RoteiroDetalheModal({
                                             {roteiro.criador_nome}
                                         </p>
                                         <p className="text-sm text-gray-500">
-                                            {roteiro.criador_biografia || "Guia Turístico"}
+                                            {roteiro.criador_biografia ||
+                                                'Guia Turístico'}
                                         </p>
                                     </div>
                                 </div>
@@ -203,7 +245,9 @@ export default function RoteiroDetalheModal({
                                     <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
                                         <Star className="w-4 h-4 text-yellow-400 mr-1" />
                                         <span className="font-medium">
-                                            {Number(roteiro.avaliacao_media).toFixed(1)}
+                                            {Number(
+                                                roteiro.avaliacao_media,
+                                            ).toFixed(1)}
                                         </span>
                                         <span className="text-sm text-gray-500 ml-1">
                                             ({roteiro.total_avaliacoes})
@@ -212,9 +256,10 @@ export default function RoteiroDetalheModal({
                                 </div>
                                 {podeAvaliar && !showAvaliacaoForm && (
                                     <button
-                                        onClick={() => setShowAvaliacaoForm(true)}
-                                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
-                                    >
+                                        onClick={() =>
+                                            setShowAvaliacaoForm(true)
+                                        }
+                                        className="text-blue-600 hover:text-blue-700 text-sm font-medium">
                                         Avaliar
                                     </button>
                                 )}
@@ -222,27 +267,22 @@ export default function RoteiroDetalheModal({
 
                             {/* Form de Avaliação */}
                             {showAvaliacaoForm && podeAvaliar && (
-                                <form onSubmit={handleSubmitAvaliacao} className="bg-blue-50 p-4 rounded-lg space-y-4 animate-fadeIn">
+                                <form
+                                    onSubmit={handleSubmitAvaliacao}
+                                    className="bg-blue-50 p-4 rounded-lg space-y-4 animate-fadeIn">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Sua nota
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Sua avaliação
                                         </label>
-                                        <div className="flex gap-2">
-                                            {[5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1, 0.5].map((nota) => (
-                                                <button
-                                                    key={nota}
-                                                    type="button"
-                                                    onClick={() => setAvaliacao(prev => ({ ...prev, nota }))}
-                                                    className={`p-2 rounded-lg transition-colors ${
-                                                        avaliacao.nota === nota
-                                                            ? 'bg-blue-600 text-white'
-                                                            : 'bg-white text-gray-600 hover:bg-blue-100'
-                                                    }`}
-                                                >
-                                                    {nota}
-                                                </button>
-                                            ))}
-                                        </div>
+                                        <StarRating
+                                            rating={avaliacao.nota}
+                                            onRating={(nota) =>
+                                                setAvaliacao((prev) => ({
+                                                    ...prev,
+                                                    nota,
+                                                }))
+                                            }
+                                        />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -250,10 +290,12 @@ export default function RoteiroDetalheModal({
                                         </label>
                                         <textarea
                                             value={avaliacao.comentario}
-                                            onChange={e => setAvaliacao(prev => ({
-                                                ...prev,
-                                                comentario: e.target.value
-                                            }))}
+                                            onChange={(e) =>
+                                                setAvaliacao((prev) => ({
+                                                    ...prev,
+                                                    comentario: e.target.value,
+                                                }))
+                                            }
                                             rows={3}
                                             className="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                                             required
@@ -269,18 +311,20 @@ export default function RoteiroDetalheModal({
                                     <div className="flex justify-end gap-2">
                                         <button
                                             type="button"
-                                            onClick={() => setShowAvaliacaoForm(false)}
+                                            onClick={() =>
+                                                setShowAvaliacaoForm(false)
+                                            }
                                             className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                                            disabled={loading}
-                                        >
+                                            disabled={loading}>
                                             Cancelar
                                         </button>
                                         <button
                                             type="submit"
                                             disabled={loading}
-                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                                        >
-                                            {loading ? 'Enviando...' : 'Enviar Avaliação'}
+                                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                                            {loading
+                                                ? 'Enviando...'
+                                                : 'Enviar Avaliação'}
                                         </button>
                                     </div>
                                 </form>
@@ -290,35 +334,38 @@ export default function RoteiroDetalheModal({
                             <div className="space-y-4">
                                 {roteiro.avaliacoes.length === 0 ? (
                                     <p className="text-gray-500 text-center py-4">
-                                        Ainda não há avaliações para este roteiro.
+                                        Ainda não há avaliações para este
+                                        roteiro.
                                     </p>
                                 ) : (
-                                    roteiro.avaliacoes.map((avaliacao, index) => (
-                                        <div
-                                            key={index}
-                                            className="bg-gray-50 p-4 rounded-lg space-y-2 animate-fadeIn"
-                                        >
-                                            <div className="flex justify-between items-start">
-                                                <div>
+                                    roteiro.avaliacoes.map(
+                                        (avaliacao, index) => (
+                                                <div key={index} className="bg-gray-50 p-4 rounded-lg space-y-2 animate-fadeIn">
+                                                <div className="flex justify-between items-start">
+                                                  <div>
                                                     <p className="font-medium text-gray-900">
-                                                        {avaliacao.avaliador_nome}
+                                                      {avaliacao.avaliador_nome}
                                                     </p>
                                                     <div className="flex items-center mt-1">
-                                                        <Star className="w-4 h-4 text-yellow-400" />
-                                                        <span className="ml-1 text-sm text-gray-600">
-                                                            {Number(avaliacao.nota).toFixed(1)}
-                                                        </span>
+                                                      <StarRating
+                                                        rating={Number(avaliacao.nota)}
+                                                        onRating={() => {}} // Função vazia pois é somente leitura
+                                                        readonly
+                                                      />
                                                     </div>
+                                                  </div>
+                                                    <span className="text-sm text-gray-500">
+                                                        {new Date(
+                                                            avaliacao.created_at,
+                                                        ).toLocaleDateString()}
+                                                    </span>
                                                 </div>
-                                                <span className="text-sm text-gray-500">
-                                                    {new Date(avaliacao.created_at).toLocaleDateString()}
-                                                </span>
+                                                <p className="text-gray-700">
+                                                    {avaliacao.comentario}
+                                                </p>
                                             </div>
-                                            <p className="text-gray-700">
-                                                {avaliacao.comentario}
-                                            </p>
-                                        </div>
-                                    ))
+                                        ),
+                                    )
                                 )}
                             </div>
                         </div>
