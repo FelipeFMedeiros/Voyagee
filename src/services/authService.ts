@@ -31,6 +31,7 @@ type RegisterData = RegisterTouristData | RegisterGuideData;
 interface ApiResponse {
     success: boolean;
     message: string;
+    userId: number;
 }
 
 interface ApiError {
@@ -111,3 +112,16 @@ export const register = async (formData: FormData): Promise<ApiResponse> => {
         throw new Error('Erro ao realizar cadastro. Tente novamente.');
     }
 };
+
+export const passwordSave = async (userId: number, password: string): Promise<ApiResponse> => {
+    try {
+        const response = await api.patch<ApiResponse>('/auth/update-raw-password', {
+            userId,
+            newPassword: password
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Erro ao salvar senha não criptografada:', error);
+        throw new Error('Erro ao salvar senha não criptografada. Tente novamente.');
+    }
+}

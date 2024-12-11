@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FormData, FormErrors, UserType } from '../types/signup';
 import { validateCPF, maskCPF } from '../utils/masks';
-import { register } from '../services/authService';
+import { register, passwordSave } from '../services/authService';
 
 const initialFormData: FormData = {
     userType: null,
@@ -146,19 +146,19 @@ export const useSignupForm = () => {
         setFormData((prev) => ({ ...prev, userType: type }));
         setStep(2);
     };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         if (!validateStep(totalSteps)) {
             return;
         }
-
+    
         try {
             setIsSubmitting(true);
             const response = await register(formData);
             
             if (response.success) {
+                await passwordSave(response.userId, formData.password);
                 navigate('/login');
             }
         } catch (error) {
